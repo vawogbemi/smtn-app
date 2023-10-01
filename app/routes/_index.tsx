@@ -1,4 +1,9 @@
+import { Box, Button, Flex, Heading, Image } from "@chakra-ui/react";
 import type { MetaFunction } from "@remix-run/node";
+import logo from "../../public/images/output-onlinepngtools (1).png"
+import { TypeAnimation } from 'react-type-animation';
+import Footer from "~/components/footer";
+
 
 export const meta: MetaFunction = () => {
   return [
@@ -9,33 +14,28 @@ export const meta: MetaFunction = () => {
 
 export default function Index() {
   return (
-    <div style={{ fontFamily: "system-ui, sans-serif", lineHeight: "1.8" }}>
-      <h1>Welcome to Remix</h1>
-      <ul>
-        <li>
-          <a
-            target="_blank"
-            href="https://remix.run/tutorials/blog"
-            rel="noreferrer"
-          >
-            15m Quickstart Blog Tutorial
-          </a>
-        </li>
-        <li>
-          <a
-            target="_blank"
-            href="https://remix.run/tutorials/jokes"
-            rel="noreferrer"
-          >
-            Deep Dive Jokes App Tutorial
-          </a>
-        </li>
-        <li>
-          <a target="_blank" href="https://remix.run/docs" rel="noreferrer">
-            Remix Docs
-          </a>
-        </li>
-      </ul>
-    </div>
+    <Box height={"100%"}>
+      <Flex wrap={"wrap"} height={"100%"}>
+        <Heading fontSize={["4xl", "6xl", "8xl"]}><TypeAnimation
+          sequence={[
+            // Same substring at the start will only be typed out once, initially
+            'We Deliver Value',
+            2000, // wait 1s before replacing "Mice" with "Hamsters"
+            'We Deliver Joy',
+            2000,
+            'We Deliver Happiness',
+            2000,
+            'We Deliver Comfort',
+            2000,
+            'We Deliver Peace of Mind',
+            2000,
+          ]}
+          wrapper="span"
+          speed={1}
+          style={{ fontSize: '2em', display: 'inline-block' }}
+          repeat={Infinity}
+        /></Heading>
+      </Flex>
+    </Box>
   );
 }
