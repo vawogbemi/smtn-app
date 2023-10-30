@@ -19,15 +19,19 @@ export default function Index() {
         <Heading fontSize={["4xl", "6xl", "8xl"]}><TypeAnimation
           sequence={[
             // Same substring at the start will only be typed out once, initially
-            'We Deliver Value',
+            'We Connect Families',
             2000, // wait 1s before replacing "Mice" with "Hamsters"
-            'We Deliver Joy',
+            'We Connect Cultures',
             2000,
-            'We Deliver Happiness',
+            'We Connect Spouses',
             2000,
-            'We Deliver Comfort',
+            'We Connect Siblings',
             2000,
-            'We Deliver Peace of Mind',
+            'We Connect Ideas',
+            2000,
+            'We Connect Brands',
+            2000,
+            'We Connect Stories',
             2000,
           ]}
           wrapper="span"

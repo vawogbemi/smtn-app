@@ -47,6 +47,9 @@ dependencies:
   '@supabase/supabase-js':
     specifier: ^2.36.0
     version: 2.36.0
+  core-js:
+    specifier: ^3.33.1
+    version: 3.33.1
   framer-motion:
     specifier: ^6
     version: 6.5.1(react-dom@18.2.0)(react@18.2.0)
@@ -3675,6 +3678,11 @@ packages:
     resolution: {integrity: sha512-2KV8NhB5JqC3ky0r9PMCAZKbUHSwtEo4CwCs0KXgruG43gX5PMqDEBbVU4OUzw2MuAWUfsuFmWvEKG5QRfSnJA==}
     dependencies:
       toggle-selection: 1.0.6
+    dev: false
+
+  /core-js@3.33.1:
+    resolution: {integrity: sha512-qVSq3s+d4+GsqN0teRCJtM6tdEEXyWxjzbhVrCHmBS5ZTM0FS2MOS0D13dUXAWDUN6a+lHI/N1hF9Ytz6iLl9Q==}
+    requiresBuild: true
     dev: false
 
   /core-util-is@1.0.3:

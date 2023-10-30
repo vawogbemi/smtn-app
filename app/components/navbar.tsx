@@ -1,4 +1,4 @@
-import { Avatar, Box, Button, Flex, Image, Menu, MenuButton, MenuItem, MenuList, Text, Wrap, WrapItem } from "@chakra-ui/react";
+import { Avatar, Box, Button, Card, CardHeader, Flex, Image, Menu, MenuButton, MenuItem, MenuList, Text, Wrap, WrapItem } from "@chakra-ui/react";
 import logo from "../../public/images/CARGO-LOGO 1.png"
 import { Link } from "@remix-run/react";
 import { Auth } from "@supabase/auth-ui-react";
@@ -15,6 +15,8 @@ export default function Navbar(props: any) {
         await props.supabase.auth.signOut()
         redirect("/")
     }
+
+    const employees = ["53149202-00f2-42b9-8103-cbdbe2d9b9e3"]
 
     return (
         <Flex flexWrap={"wrap"} w={"100%"} h={["fit-content", "fit-content", 50]}>
@@ -33,7 +35,8 @@ export default function Navbar(props: any) {
                         </MenuList>
                     </Menu>
                 </WrapItem>
-                <WrapItem>
+                {props.session ?
+                    <WrapItem>
                     <Menu>
                         <MenuButton as={Text} borderRadius={5} px={2.5} py={12.5} my={"auto"} minW={["100vw", 0]} _hover={{ "bg": "white", "color": "#4299E1" }}>
                             Packages
@@ -43,27 +46,30 @@ export default function Navbar(props: any) {
                             <Link to={"/packages/add-package"}><MenuItem>Add Package</MenuItem></Link>
                         </MenuList>
                     </Menu>
-                </WrapItem>
-                <WrapItem>
+                </WrapItem> : 
+                <></>}
+                {props.session && employees.includes(props.session.user.id) ? <WrapItem>
                     <Menu>
                         <MenuButton as={Text} borderRadius={5} px={2.5} py={12.5} my={"auto"} minW={["100vw", 0]} _hover={{ "bg": "white", "color": "#4299E1" }}>
                             Employee
                         </MenuButton>
                         <MenuList color={"#4299E1"}>
-                            <Link to={"/company/bvn"}><MenuItem>Recent Packages</MenuItem></Link>
+                            <Link to={"/employee/packages"}><MenuItem>Recent Packages</MenuItem></Link>
                             <Link to={"/company/faq"}><MenuItem>Shipments</MenuItem></Link>
                             <Link to={"/company/bvn"}><MenuItem>Customers</MenuItem></Link>
                         </MenuList>
                     </Menu>
-                </WrapItem>
+                </WrapItem> :
+                <></>}
                 <WrapItem minW={["100vw", 0]}>
                     {
                         props.session ?
                             <Menu>
-                                <MenuButton as={Avatar} name='Kola Tioluwani' src={props.session.user.user_metadata.avatar_url} borderRadius={5} px={2.5} py={12.5} my={"auto"} minW={["20vw", 0]} mx={["auto", 0]} border={""} _hover={{ "border": "2px", "borderColor": "white", "color": "#4299E1" }}>
+                                <MenuButton as={Avatar} name={props.session.user.user_metadata.name} src={props.session.user.user_metadata.avatar_url} borderRadius={5} px={2.5} py={12.5} my={"auto"} minW={["20vw", 0]} mx={["auto", 0]} border={""} _hover={{ "border": "2px", "borderColor": "white", "color": "#4299E1" }}>
                                 </MenuButton>
                                 <MenuList color={"#4299E1"}>
-                                    <Link to={"/company/faq"}><MenuItem>Account</MenuItem></Link>
+                                    <Card mb={1} bg={"#4299E1"}><CardHeader><Text color={"white"}>{props.users[props.session.user.id] ? props.users[props.session.user.id].at(0).name : props.session.user.user_metadata.name}</Text></CardHeader></Card>
+                                    <Link to={"/account"}><MenuItem>Account</MenuItem></Link>
                                     <MenuItem onClick={handleLogout}>Log out</MenuItem>
                                 </MenuList>
                             </Menu> :

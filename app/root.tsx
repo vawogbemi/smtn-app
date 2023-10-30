@@ -12,14 +12,15 @@ import {
   useLoaderData,
   useRevalidator,
 } from '@remix-run/react'
-import { MetaFunction, LinksFunction, LoaderFunctionArgs, json } from '@remix-run/node' // Depends on the runtime you choose
+import { MetaFunction, LinksFunction, LoaderFunctionArgs, json, Session } from '@remix-run/node' // Depends on the runtime you choose
 import { ServerStyleContext, ClientStyleContext } from './context'
 import Navbar from './components/navbar'
 import Footer from './components/footer'
 import { SupabaseClient, createBrowserClient, createServerClient } from '@supabase/auth-helpers-remix'
 import { Database } from 'database.types'
 import { Auth } from '@supabase/auth-ui-react'
-import { ThemeSupa } from '@supabase/auth-ui-shared'
+import { ThemeSupa, supabase } from '@supabase/auth-ui-shared'
+import { groupBy } from './utils/utils'
 
 
 export const meta: MetaFunction = () => {
@@ -132,10 +133,13 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     data: { session },
   } = await supabase.auth.getSession()
 
+  const { data: users } = await supabase.from("users").select()
+  
   return json(
     {
       env,
       session,
+      users,
     },
     {
       headers: response.headers,
@@ -143,17 +147,15 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   )
 }
 
-
 export default function App() {
-  const { env, session } = useLoaderData<typeof loader>()
+  const { env, session, users } = useLoaderData<typeof loader>()
   const { revalidate } = useRevalidator()
-  const userEmail = "fsa"
   const [supabase] = useState(() =>
     createBrowserClient<Database>(env.SUPABASE_URL, env.SUPABASE_ANON_KEY)
   )
-
+  const groupedUsers = users ? groupBy(users!, ["id"]) : {}
+  //Auto Refresh Access Token
   const serverAccessToken = session?.access_token
-
   useEffect(() => {
     const {
       data: { subscription },
@@ -169,14 +171,13 @@ export default function App() {
     }
   }, [serverAccessToken, supabase, revalidate])
 
-  
   return (
     <Document>
       <ChakraProvider theme={theme}>
         <Flex m={"1vh"} h={"97vh"} wrap={"wrap"}>
-          <Navbar supabase={supabase} session={session} />
-          <Box my={"auto"} mx={"auto"}  >
-            <Outlet context={{userEmail}} />
+          <Navbar supabase={supabase} session={session} users={groupedUsers}/>
+          <Box my={"auto"} mx={"auto"}>
+            <Outlet context={{supabase, session, users, groupedUsers}} />
           </Box>
           <Footer />
         </Flex>
