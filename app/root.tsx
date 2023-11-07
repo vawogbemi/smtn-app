@@ -1,8 +1,9 @@
 // root.tsx
-import React, { useContext, useEffect, useState } from 'react'
-import { withEmotionCache } from '@emotion/react'
-import { extendTheme, ChakraProvider, Flex, Box } from '@chakra-ui/react'
+import { AlertDialog, AlertDialogBody, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogOverlay, Box, Button, ChakraProvider, Flex, Text, extendTheme, useDisclosure } from '@chakra-ui/react';
+import { withEmotionCache } from '@emotion/react';
+import { LinksFunction, LoaderFunctionArgs, MetaFunction, json } from '@remix-run/node'; // Depends on the runtime you choose
 import {
+  Link,
   Links,
   LiveReload,
   Meta,
@@ -11,16 +12,15 @@ import {
   ScrollRestoration,
   useLoaderData,
   useRevalidator,
-} from '@remix-run/react'
-import { MetaFunction, LinksFunction, LoaderFunctionArgs, json, Session } from '@remix-run/node' // Depends on the runtime you choose
-import { ServerStyleContext, ClientStyleContext } from './context'
-import Navbar from './components/navbar'
-import Footer from './components/footer'
-import { SupabaseClient, createBrowserClient, createServerClient } from '@supabase/auth-helpers-remix'
-import { Database } from 'database.types'
-import { Auth } from '@supabase/auth-ui-react'
-import { ThemeSupa, supabase } from '@supabase/auth-ui-shared'
-import { groupBy } from './utils/utils'
+  useRouteError,
+} from '@remix-run/react';
+import { createBrowserClient, createServerClient } from '@supabase/auth-helpers-remix';
+import { Database } from 'database.types';
+import React, { useContext, useEffect, useState } from 'react';
+import Footer from './components/footer';
+import Navbar from './components/navbar';
+import { ClientStyleContext, ServerStyleContext } from './context';
+import { groupBy } from './utils/utils';
 
 
 export const meta: MetaFunction = () => {
@@ -101,6 +101,7 @@ const colors = {
     800: '#153e75',
     700: '#2a69ac',
   },
+  smtn: "#4299E1",
 }
 
 
@@ -115,6 +116,24 @@ const theme = extendTheme({
     })
   },
 })
+
+export function ErrorBoundary() {
+  const error = useRouteError();
+  console.error(error);
+  return (
+    <html>
+      <head>
+        <title>Oh no!</title>
+        <Meta />
+        <Links />
+      </head>
+      <body>
+        <Text>Oh ya something went wrong o. Please pray for God to fix this issue.</Text>
+        <Scripts />
+      </body>
+    </html>
+  );
+}
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const env = {
@@ -133,13 +152,20 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     data: { session },
   } = await supabase.auth.getSession()
 
-  const { data: users } = await supabase.from("users").select()
-  
+  const { data: users } = session ? await supabase.from("users").select() : { data: null }
+  const { data: shipments } = session ? await supabase.from("shipments").select().order('id', { ascending: false }) : { data: null }
+  const { data: cargo } = session ? await supabase.from("cargo").select().order('shipment', { ascending: false }) : { data: null }
+  const { data: boxes } = session ? await supabase.from("boxes").select().order('shipment', { ascending: false }) : { data: null }
+
+
   return json(
     {
       env,
       session,
       users,
+      shipments,
+      cargo,
+      boxes
     },
     {
       headers: response.headers,
@@ -148,14 +174,17 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 }
 
 export default function App() {
-  const { env, session, users } = useLoaderData<typeof loader>()
+  const { env, session, users, shipments, cargo, boxes } = useLoaderData<typeof loader>()
+
   const { revalidate } = useRevalidator()
+
   const [supabase] = useState(() =>
     createBrowserClient<Database>(env.SUPABASE_URL, env.SUPABASE_ANON_KEY)
   )
-  const groupedUsers = users ? groupBy(users!, ["id"]) : {}
+
   //Auto Refresh Access Token
   const serverAccessToken = session?.access_token
+
   useEffect(() => {
     const {
       data: { subscription },
@@ -171,13 +200,44 @@ export default function App() {
     }
   }, [serverAccessToken, supabase, revalidate])
 
+  //data sorting
+  const user = session && users?.includes(session.user.id) ? users?.find(user => user.id == session.user.id) : null //equals undefined if user not defined yet
+
+  //alert dialog
+  const cancelRef = React.useRef(null)
+  const { isOpen, onClose } = useDisclosure({ defaultIsOpen: session && !user ? true : false })
+
+
   return (
     <Document>
       <ChakraProvider theme={theme}>
         <Flex m={"1vh"} h={"97vh"} wrap={"wrap"}>
-          <Navbar supabase={supabase} session={session} users={groupedUsers}/>
+          <Navbar supabase={supabase} session={session} users={users} />
           <Box my={"auto"} mx={"auto"}>
-            <Outlet context={{supabase, session, users, groupedUsers}} />
+            <AlertDialog
+              isOpen={isOpen}
+              leastDestructiveRef={cancelRef}
+              onClose={() => { }}
+            >
+              <AlertDialogOverlay>
+                <AlertDialogContent>
+                  <AlertDialogHeader color={"smtn"} fontSize={"lg"} fontWeight={"bold"}>
+                    Set up details
+                  </AlertDialogHeader>
+                  <AlertDialogBody color={"smtn"}>
+                    We noticed you haven't set up account information.
+                  </AlertDialogBody>
+                  <AlertDialogFooter>
+                    <Link to={"/account"}>
+                      <Button colorScheme={"green"} onClick={onClose}>
+                        Enter account information
+                      </Button>
+                    </Link>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialogOverlay>
+            </AlertDialog>
+            <Outlet context={{ session, user, users, shipments, cargo, boxes }} />
           </Box>
           <Footer />
         </Flex>

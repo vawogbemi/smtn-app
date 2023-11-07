@@ -7,7 +7,7 @@ import Footer from "~/components/footer";
 
 export const meta: MetaFunction = () => {
   return [
-    { title: "New Remix App" },
+    { title: "SMTN" },
     { name: "description", content: "Welcome to Remix!" },
   ];
 };
