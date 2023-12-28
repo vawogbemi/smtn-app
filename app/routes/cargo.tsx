@@ -33,7 +33,7 @@ export default function Packages() {
     }, [])
     
     return (
-        <Box bg={"white"} color={"smtn"} borderRadius={10} p={10} w={"90vw"} overflowY={"scroll"}>
+        <Box bg={"white"} color={"blackAlpha.800"} borderRadius={10} p={10} w={"90vw"} overflowY={"scroll"}>
             <Outlet context={{ session, user, shipments, cargo, boxes }} />
         </Box>
     )

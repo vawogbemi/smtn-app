@@ -1,4 +1,4 @@
-export const EMPLOYEES = ["53149202-00f2-42b9-8103-cbdbe2d9b9e3", "7ae47660-d774-4b76-a2a0-2aaecbd1ee86", "b3faf80a-8ab0-45a2-bded-ea31a80daf98"]
+export const EMPLOYEES = ["53149202-00f2-42b9-8103-cbdbe2d9b9e3", "7ae47660-d774-4b76-a2a0-2aaecbd1ee86", "b3faf80a-8ab0-45a2-bded-ea31a80daf98", "daa4134c-56af-48ed-94ed-25985a8dab8a"]
 
 export function groupBy(arr: Array<any>, properties: Array<any>) {
     let grouped = <any>{};
@@ -75,28 +75,28 @@ export function parseDestinationAndMethod(destination: string, method: string) {
     if (destination == "NG") {
         if (method == "AIR") {
 
-            return "To Nigeria 🇳🇬 by ✈️"
+            return "Nigeria 🇳🇬, Air ✈️"
 
         }
         if (method == "SEA") {
-            return "To Nigeria 🇳🇬 by 🚢"
+            return "Nigeria 🇳🇬, Sea 🚢"
         }
     }
 
     if (destination == "CA") {
         if (method == "AIR") {
 
-            return "To Canada 🇨🇦 by ✈️"
+            return "Canada 🇨🇦, Air ✈️"
 
         }
         if (method == "SEA") {
 
-            return "To Canada 🇨🇦 by 🚢"
+            return "Canada 🇨🇦, Sea 🚢"
 
         }
     }
 
-    return "To"
+    return "Whoops. Something went wrong."
 }
 
 export function getShipmentStatus(shipments: Array<any>, shipment: any, destination: any, method: any) {

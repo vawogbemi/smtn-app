@@ -44,15 +44,13 @@ const steps = [
 ]
 
 export default function MyPackages() {
-    //const { packages } = useLoaderData<typeof loader>()
 
     const { session, user, shipments, cargo, boxes } = useOutletContext<any>()
+    const filteredCargo = cargo!.filter((cargo: { sender: any, employee: any; }) => cargo.sender == user.id && cargo.employee)
 
-    const filteredCargo = cargo!.filter((cargo: { sender: any, employee: any; }) => cargo.sender == "user.id")
-    //console.log(getCargoBoxes(boxes, "231103", , destination, method))
     return (
         <Box maxH={"70vh"}>
-            {filteredCargo.length ?
+            {filteredCargo.length > 0 ?
                 Object.entries(groupBy(filteredCargo, ["shipment", "destination", "method"])).reverse().map(([shipment, destinations]) =>
                     Object.entries((destinations as Object)).map(([destination, methods]) =>
                         Object.entries(methods as Object).map(([method, [details]]) =>
@@ -85,7 +83,7 @@ export default function MyPackages() {
                                     <Box mr={"auto"}>
                                         <Stat>
                                             <StatLabel>Receiver</StatLabel>
-                                            <StatNumber>{details.receiver}</StatNumber>
+                                            <StatNumber>{details.receiver_name}</StatNumber>
                                         </Stat>
                                     </Box>
                                     <Box mr={"auto"}>
@@ -143,7 +141,7 @@ export default function MyPackages() {
                                 </Tabs>
                             </Box>
                         )))
-                : <Text color={"smtn"}>You have no cargo to track</Text>}
+                : <Text color={"blackAlpha.800"}>You have no cargo to track</Text>}
             <Box h={1} />
         </Box>
     )

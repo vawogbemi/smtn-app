@@ -15,7 +15,7 @@ export default function Employee(){
     }
 
     return (
-        <Box bg={"white"} color={"#4299E1"} borderRadius={10} p={10} w={"90vw"} overflowY={"scroll"}>
+        <Box bg={"white"} color={"blackAlpha.800"} borderRadius={10} p={10} w={"90vw"} overflowY={"auto"} maxH={"80vh"}>
             <Outlet context={{session, user, users, shipments, cargo, boxes}}/>
         </Box>
     )

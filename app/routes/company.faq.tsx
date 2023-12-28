@@ -2,7 +2,7 @@ import { Accordion, AccordionButton, AccordionIcon, AccordionItem, AccordionPane
 
 export default function FAQ() {
     return (
-            <Accordion bg={"white"} color={"#4299E1"} borderRadius={10} p={10}>
+            <Accordion>
             <Heading mx={"auto"} mb={5} width={"-webkit-fit-content"}> Frequently Asked Questions </Heading>
                 <AccordionItem>
                     <h2>

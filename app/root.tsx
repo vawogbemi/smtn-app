@@ -1,26 +1,32 @@
 // root.tsx
-import { AlertDialog, AlertDialogBody, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogOverlay, Box, Button, ChakraProvider, Flex, Text, extendTheme, useDisclosure } from '@chakra-ui/react';
+import { Box, ChakraProvider, Flex, Text, extendTheme } from '@chakra-ui/react';
 import { withEmotionCache } from '@emotion/react';
-import { LinksFunction, LoaderFunctionArgs, MetaFunction, json } from '@remix-run/node'; // Depends on the runtime you choose
+import { ActionFunctionArgs, LinksFunction, LoaderFunctionArgs, MetaFunction, json, redirect } from '@remix-run/node'; // Depends on the runtime you choose
 import {
-  Link,
   Links,
   LiveReload,
   Meta,
   Outlet,
   Scripts,
   ScrollRestoration,
+  useActionData,
   useLoaderData,
   useRevalidator,
   useRouteError,
+  useSubmit
 } from '@remix-run/react';
 import { createBrowserClient, createServerClient } from '@supabase/auth-helpers-remix';
 import { Database } from 'database.types';
 import React, { useContext, useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
 import Footer from './components/footer';
+import LoginForm from './components/login';
 import Navbar from './components/navbar';
+import SignUpForm from './components/signup';
 import { ClientStyleContext, ServerStyleContext } from './context';
-import { groupBy } from './utils/utils';
+import * as Yup from "yup";
+import { yupResolver } from '@hookform/resolvers/yup';
+import { supabase } from '@supabase/auth-ui-shared';
 
 
 export const meta: MetaFunction = () => {
@@ -135,6 +141,44 @@ export function ErrorBoundary() {
   );
 }
 
+export async function action({ request }: ActionFunctionArgs) {
+  return json("hi")
+  const body = await request.formData()
+
+  const response = new Response()
+
+  const supabase = createServerClient(process.env.SUPABASE_URL!, process.env.SUPABASE_ANON_KEY!, {
+    request,
+    response,
+  })
+  
+ 
+  const userId = await (await supabase.auth.getUser()).data.user?.id
+  console.log(body.get("phone"))
+  console.log(body.get("password"))
+  if (body.get("form") == "signup") {
+
+    const { error } = await supabase.from("users").insert({ id: userId, phone: body.get("phone") as string, name: body.get("name") as string, country: body.get("country") as string, city: body.get("city") as string, email: body.get("email") as string })
+    
+    if (error){
+      console.log(error)
+    }
+
+    console.log({ id: userId, phone: body.get("phone") as string, name: body.get("name") as string, country: body.get("country") as string, city: body.get("city") as string, email: body.get("email") as string })
+
+    return redirect("/")
+
+  }
+  else if (body.get("form") == "login") {
+
+    return redirect("/")
+
+  }
+
+  return redirect("/yooyoyoyo")
+
+}
+
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const env = {
     SUPABASE_URL: process.env.SUPABASE_URL!,
@@ -154,10 +198,10 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   const { data: users } = session ? await supabase.from("users").select() : { data: null }
   const { data: shipments } = session ? await supabase.from("shipments").select().order('id', { ascending: false }) : { data: null }
-  const { data: cargo } = session ? await supabase.from("cargo").select().order('shipment', { ascending: false }) : { data: null }
-  const { data: boxes } = session ? await supabase.from("boxes").select().order('shipment', { ascending: false }) : { data: null }
+  const { data: cargo } = session ? await supabase.from("cargo").select().order('shipment', { ascending: false }).order('id', {ascending: true}) : { data: null }
+  const { data: boxes } = session ? await supabase.from("boxes").select().order('shipment', { ascending: false }).order('destination').order('method').order('cargo', {ascending: true}).order('id', {ascending: true}) : { data: null }
 
-
+  //await supabase.auth.signInWithPassword({ phone: "+12066379295", password: "redvictor10" })
   return json(
     {
       env,
@@ -176,6 +220,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 export default function App() {
   const { env, session, users, shipments, cargo, boxes } = useLoaderData<typeof loader>()
 
+  const data = useActionData<typeof action>();
+  
   const { revalidate } = useRevalidator()
 
   const [supabase] = useState(() =>
@@ -201,43 +247,22 @@ export default function App() {
   }, [serverAccessToken, supabase, revalidate])
 
   //data sorting
-  const user = session && users?.includes(session.user.id) ? users?.find(user => user.id == session.user.id) : null //equals undefined if user not defined yet
+  const user = session && users && users.map(user => user.id).includes(session.user.id) ? users?.find(user => user.id == session.user.id) : null //equals undefined if user not defined yet
 
-  //alert dialog
-  const cancelRef = React.useRef(null)
-  const { isOpen, onClose } = useDisclosure({ defaultIsOpen: session && !user ? true : false })
+  const [signUp, setSignUp] = useState(false)
+
+  const [login, setLogin] = useState(false)
+
+
 
 
   return (
     <Document>
       <ChakraProvider theme={theme}>
         <Flex m={"1vh"} h={"97vh"} wrap={"wrap"}>
-          <Navbar supabase={supabase} session={session} users={users} />
+          <Navbar supabase={supabase} session={session} user={user} signUp={signUp} setSignUp={setSignUp} login={login} setLogin={setLogin} />
           <Box my={"auto"} mx={"auto"}>
-            <AlertDialog
-              isOpen={isOpen}
-              leastDestructiveRef={cancelRef}
-              onClose={() => { }}
-            >
-              <AlertDialogOverlay>
-                <AlertDialogContent>
-                  <AlertDialogHeader color={"smtn"} fontSize={"lg"} fontWeight={"bold"}>
-                    Set up details
-                  </AlertDialogHeader>
-                  <AlertDialogBody color={"smtn"}>
-                    We noticed you haven't set up account information.
-                  </AlertDialogBody>
-                  <AlertDialogFooter>
-                    <Link to={"/account"}>
-                      <Button colorScheme={"green"} onClick={onClose}>
-                        Enter account information
-                      </Button>
-                    </Link>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialogOverlay>
-            </AlertDialog>
-            <Outlet context={{ session, user, users, shipments, cargo, boxes }} />
+            {signUp ? <SignUpForm setSignUp={setSignUp} supabase={supabase} /> : login ? <LoginForm setLogin={setLogin} supabase={supabase} /> : <Outlet context={{ session, user, users, shipments, cargo, boxes }} />}
           </Box>
           <Footer />
         </Flex>

@@ -1,16 +1,18 @@
-import { Button, Flex, FormControl, Heading } from "@chakra-ui/react";
+import { Button, Flex, FormControl, Heading, useToast } from "@chakra-ui/react";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { ActionFunctionArgs, redirect } from "@remix-run/node";
-import { Form, useOutletContext, useSubmit } from "@remix-run/react";
+import { ActionFunctionArgs, json, redirect } from "@remix-run/node";
+import { Form, useActionData, useOutletContext, useSubmit } from "@remix-run/react";
 import { createServerClient } from "@supabase/auth-helpers-remix";
 import { Database } from "database.types";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { InputControl, NumberInputControl, SelectControl, TextareaControl } from "react-hook-form-chakra";
 import * as Yup from "yup";
+import CountryCodeSelector from "~/components/countrycodeselector";
 import { getShipmentId } from "~/utils/utils";
 
 
-export const action = async ({ request, }: ActionFunctionArgs) => {
+export const action = async ({ request }: ActionFunctionArgs) => {
     const body = await request.formData();
 
     const response = new Response()
@@ -21,22 +23,38 @@ export const action = async ({ request, }: ActionFunctionArgs) => {
     })
 
     const user = body.get("user") as string
-    const receiver = body.get("receiver") as string
+
+    const sender_name = body.get("sender_name") as string
+    const sender_country_code = body.get("sender_country_code") as string
+    const sender_phone = body.get("sender_phone") as string
+    const receiver_name = body.get("receiver_name") as string
+    const receiver_country_code = body.get("country_code") as string
+    const receiver_phone = body.get("receiver_phone") as string
     const description = body.get("description") as string
     const method = body.get("method") as string
     const destination = body.get("destination") as string
 
     const shipment = getShipmentId()
 
+    //Create shipment if one doesn't exist
+    const { error: shipmentError } = await supabase.from("shipments").insert({ id: shipment, destination: destination, method: method })
+
+    //Gets last cargo for so you can order ids in regards to primary key
     const { data: lastCargo } = await supabase.from("cargo").select().match({ shipment: shipment, destination: destination, method: method }).order('id', { ascending: false }).limit(1)
 
     //@ts-ignore
     const id = lastCargo && lastCargo.length > 0 ? lastCargo!.at(0).id + 1 : 1
+    
+    //Inserts new cargo
+    const { error: cargoError } = await supabase.from("cargo").insert({ id: id, shipment: shipment, destination: destination, method: method, description: description, sender: user, receiver_name: receiver_name, receiver_country_code: receiver_country_code, receiver_phone: receiver_phone  })
+    
+    if (shipmentError){
+        console.log(`SHIPMENT ERROR: ${shipmentError}`)
+    }
 
-    const { error } = await supabase.from("cargo").insert({ id: id, shipment: shipment, destination: destination, method: method, description: description, sender: user, receiver: receiver })
-
-    if (error) {
-        console.log(error);
+    if (cargoError) {
+        console.log(`CARGO ERROR: ${cargoError}`);
+        return json({ cargoError })
     }
 
     //await new Promise(r => setTimeout(r, 5000));
@@ -46,6 +64,22 @@ export const action = async ({ request, }: ActionFunctionArgs) => {
 export default function AddPackages() {
     const { user, shipment, cargo } = useOutletContext<any>()
 
+    const actionData = useActionData<typeof action>();
+    const toast = useToast()
+
+    const [other, setOther] = useState(false)
+
+    useEffect(() => {
+        actionData?.cargoError ? toast({
+            title: 'Something went wrong.',
+            description: "Please try again or contact us.",
+            status: 'error',
+            duration: 9000,
+            isClosable: true,
+        }) :
+            null
+    }, [actionData])
+    
     const defaultValues = {
         destination: "",
         method: "",
@@ -60,7 +94,7 @@ export default function AddPackages() {
         receiver: Yup.string(),
     })
 
-    const { handleSubmit, control } = useForm({ resolver: yupResolver(validationSchema), defaultValues, mode: "onBlur" });
+    const { handleSubmit, control, getValues } = useForm({ resolver: yupResolver(validationSchema), defaultValues, mode: "onBlur" });
 
     const submit = useSubmit()
 
@@ -95,7 +129,9 @@ export default function AddPackages() {
                 </SelectControl>
                 <TextareaControl mb={5} name="description" label="Description of Items" control={control} />
                 <Heading mx={"auto"} mb={5} fontSize={"2xl"}>Receiver Details</Heading>
-                <InputControl name="receiver" label="Receiver Email" helperText="We will notify you by default if left empty" control={control}></InputControl>
+                <InputControl name="receiver_name" label="Receiver Name" helperText="We will notify you by default if left empty" control={control} mb={5}></InputControl>
+                <CountryCodeSelector control={control} other={other} setOther={setOther} getValues={getValues}  />
+                <InputControl mt={5} name="receiver_phone" label="Receiver Phone" helperText="We will notify you by default if left empty" control={control}></InputControl>
                 <Flex>
                     <Button mt={5} mx={"auto"} type="submit">Submit</Button>
                 </Flex>

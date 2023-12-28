@@ -15,7 +15,7 @@ export const action = async ({ request, }: ActionFunctionArgs) => {
     const body = await request.formData();
 
     let boxes: any[] = new Array(parseInt(body.get("boxes") as string)).fill(null).map((_, i) => i + 1)
-    const paid:boolean = body.get("paid") == "undefined" ? false : true
+    const paid: boolean = body.get("paid") == "undefined" ? false : true
 
     const response = new Response()
 
@@ -29,7 +29,7 @@ export const action = async ({ request, }: ActionFunctionArgs) => {
     //let packages = [{}] as Array<any>
     boxes = boxes.flatMap(id => Array(1).fill({ id: id, shipment: parseInt(body.get("shipment") as string), cargo: parseInt(body.get("cargo") as string), destination: body.get("destination") as string, method: body.get("method") as string, length: parseInt(body.get("length" + id) as string), width: parseInt(body.get("width" + id) as string), height: parseInt(body.get("height" + id) as string), weight: parseInt(body.get("weight" + id) as string) }))
     const { error: boxesError } = await supabase.from("boxes").insert(boxes)//.eq("id", 13)  
-    const { error: cargoError } = await supabase.from("cargo").update({ employee: employee.data.user?.id, paid: paid}).match({ shipment: parseInt(body.get("shipment") as string), id: parseInt(body.get("cargo") as string), destination: body.get("destination") as string, method: body.get("method") as string })
+    const { error: cargoError } = await supabase.from("cargo").update({ employee: employee.data.user?.id, paid: paid }).match({ shipment: parseInt(body.get("shipment") as string), id: parseInt(body.get("cargo") as string), destination: body.get("destination") as string, method: body.get("method") as string })
 
     if (boxesError) {
         console.log(boxesError)
@@ -63,9 +63,9 @@ export default function Packages() {
                 ([key, cargoDetails]) =>
                     <AccordionItem key={key}>
                         <h2>
-                            <AccordionButton>
+                            <AccordionButton height={20}>
                                 <Box as="span" flex='1' textAlign='left'>
-                                    {users.find((user: { id: any; }) => user.id == (cargoDetails as any).sender).name + " " + parseDestinationAndMethod((cargoDetails as any).destination, (cargoDetails as any).method)}
+                                    <Text fontSize={"2xl"}>{users.find((user: { id: any; }) => user.id == (cargoDetails as any).sender).name + " " + parseDestinationAndMethod((cargoDetails as any).destination, (cargoDetails as any).method)}</Text>
                                 </Box>
                                 <AccordionIcon />
                             </AccordionButton>
@@ -90,18 +90,18 @@ export default function Packages() {
                             <Tabs>
                                 <TabList>
                                     {
-                                        <Flex>
+                                        <Flex overflow={"auto"}>
                                             {Object.entries(boxes).map(([key, box]) =>
-                                                <Tab key={key}>
+                                                <Tab key={key} width={20}>
                                                     {keyToAlphabet(parseInt(key) + 1)}
                                                 </Tab>
                                             )}
-                                            <IconButton aria-label="add icon" icon={<AddIcon />} ml={"auto"} size={"sm"} onClick={()=>{setBoxes([...boxes, {}]); console.log(boxes)}}></IconButton>
-                                            <IconButton aria-label="delete icon" icon={<CloseIcon />} ml={1} size={"sm"} onClick={()=>{setBoxes([...boxes.slice(0, -1)]); console.log(boxes)}}></IconButton>
+                                            <IconButton aria-label="add icon" icon={<AddIcon />} ml={"auto"} mb={1} size={"md"} onClick={() => { setBoxes([...boxes, {}]); console.log(boxes) }}></IconButton>
+                                            <IconButton aria-label="delete icon" icon={<CloseIcon />} ml={1} mb={1} size={"md"} onClick={() => { setBoxes([...boxes.slice(0, -1)]); console.log(boxes) }}></IconButton>
                                         </Flex>
                                     }
                                 </TabList>
-                                <Form method="post" onSubmit={handleSubmit((data) => submit({ ...data, boxes: boxes.length, shipment: (cargoDetails as any).shipment, cargo: (cargoDetails as any).id, destination: (cargoDetails as any).destination, method: (cargoDetails as any).method}, {
+                                <Form method="post" onSubmit={handleSubmit((data) => submit({ ...data, boxes: boxes.length, shipment: (cargoDetails as any).shipment, cargo: (cargoDetails as any).id, destination: (cargoDetails as any).destination, method: (cargoDetails as any).method }, {
                                     action: "",
                                     method: "post",
                                 }))}>

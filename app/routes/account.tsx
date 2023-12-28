@@ -21,12 +21,12 @@ export const action = async ({ request, }: ActionFunctionArgs) => {
     const { id, email } = user!
     const { avatar_url } = user?.user_metadata!
     const name = body.get("name") as string
-    const phone_number = parseInt(body.get("phone_number") as string)
+    const phone = parseInt(body.get("phone") as string)
     const address = body.get("address") as string
     const city = body.get("city") as string
     const postal_code = body.get("postal_code") as string
 
-    const { error } = await supabase.from("users").upsert({ id: id, name: name, phone_number: phone_number, address: address, city: city, postal_code: postal_code, avatar_url: avatar_url, email: email })   
+    const { error } = await supabase.from("users").upsert({ id: id, name: name, phoner: phone, address: address, city: city, postal_code: postal_code, avatar_url: avatar_url, email: email })   
 
     if (error) {
         console.log(error);
@@ -62,7 +62,7 @@ export default function Account() {
     const submit = useSubmit()
 
     return (
-        <Box bg={"white"} color={"#4299E1"} borderRadius={10} p={10} w={"90vw"}>
+        <Box bg={"white"} color={"blackAlpha.800"} borderRadius={10} p={10} w={"90vw"}>
             <Form method="post" onSubmit={handleSubmit((data) => submit({ ...data, ...session.user }, {
                 action: "",
                 method: "post",
@@ -70,7 +70,7 @@ export default function Account() {
                 <Heading mx={"auto"} mb={5} width={"-webkit-fit-content"}>Account</Heading>
                 <FormControl>
                     <InputControl name="name" label="Name" control={control} mb={5} />
-                    <InputControl name="phone_number" label="Phone Number" control={control} mb={5} />
+                    <InputControl name="phone" label="Phone Number" control={control} mb={5} />
                     <InputControl name="address" label="Street Address" control={control} mb={5} />
                     <InputControl name="city" label="City" control={control} mb={5} />
                     <InputControl name="postal_code" label="Postal Code" control={control} mb={5} />
